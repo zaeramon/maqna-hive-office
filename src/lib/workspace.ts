@@ -55,7 +55,8 @@ export async function openWorkspace(userId: string): Promise<{context:WorkspaceC
       {exhibit_key:"hero-art-gallery",floor_number:3,exhibit_type:"artwork",title:"Hero Reference Gallery",caption:"A gallery reserved for pixel-art character sheets and visual design experiments.",project_key:null,status:"published",display_order:40,metadata:{theme:"art",seeded:true}},
       {exhibit_key:"question-wall",floor_number:2,exhibit_type:"question",title:"The Question Wall",caption:"A place to pin memorable questions after they are deliberately selected for the museum.",project_key:null,status:"published",display_order:50,metadata:{theme:"questions",seeded:true}}
     ].map(x=>({...x,workspace_id:workspace.id,owner_user_id:userId}));
-    const {data:seeded,error:seedError}=await supabase.from("hive_office_exhibits").insert(starter).select("exhibit_key,floor_number,exhibit_type,title,caption,asset_path").order("display_order");
+    const {data:seeded,error:seedError}=await supabase.from("hive_office_exhibits").insert(starter)
+      .select("exhibit_key,floor_number,exhibit_type,title,caption,asset_path,display_order").order("display_order");
     if(seedError)throw seedError;exhibitRows=seeded||[];
   }
   const agents:OfficeAgent[]=last?.snapshot?.agents?.length ? last.snapshot.agents : FALLBACK_AGENTS;
