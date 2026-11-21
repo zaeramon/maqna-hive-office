@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import type { OfficeAgent } from "../lib/types";
 
-type Rig={root:THREE.Group;leftArm:THREE.Group;rightArm:THREE.Group;leftLeg:THREE.Group;rightLeg:THREE.Group;head:THREE.Group;mouth:THREE.Mesh;bubble:THREE.Group;kind:string;phase:number};
+type Rig={root:THREE.Group;leftArm:THREE.Group;rightArm:THREE.Group;leftElbow:THREE.Group;rightElbow:THREE.Group;leftHand:THREE.Group;rightHand:THREE.Group;leftLeg:THREE.Group;rightLeg:THREE.Group;head:THREE.Group;mouth:THREE.Mesh;bubble:THREE.Group;kind:string;phase:number};
 const palette=["#5d91b8","#bd915e","#8e78b6","#67b99a","#c57c68"];
 function mat(color:string,roughness=.82){return new THREE.MeshStandardMaterial({color,roughness,metalness:.02});}
 function block(parent:THREE.Object3D,geometry:THREE.BufferGeometry,material:THREE.Material,x:number,y:number,z:number){const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
@@ -14,8 +14,7 @@ function makeRig(scene:THREE.Scene,x:number,z:number,kind:string,index=0):Rig{
  const leftLeg=limb(-.19,.88,pants,.76,.13),rightLeg=limb(.19,.88,pants,.76,.13);
  block(leftLeg,new THREE.BoxGeometry(.3,.16,.42),shoe,0,-.69,.08);block(rightLeg,new THREE.BoxGeometry(.3,.16,.42),shoe,0,-.69,.08);
  const torso=block(root,new THREE.CapsuleGeometry(.34,.57,6,12),shirt,0,1.25,0);torso.scale.set(1,1.12,.72);
- const arm=(px:number)=>{const p=new THREE.Group();p.position.set(px,1.55,0);root.add(p);block(p,new THREE.CapsuleGeometry(.115,.55,5,10),shirt,0,-.29,0);block(p,new THREE.SphereGeometry(.12,12,10),skin,0,-.62,.01);return p;};
- const leftArm=arm(-.43),rightArm=arm(.43);
+ const arm=(px:number,side:number)=>{const shoulder=new THREE.Group();shoulder.position.set(px,1.55,0);root.add(shoulder);block(shoulder,new THREE.SphereGeometry(.13,12,10),shirt,0,-.04,0);block(shoulder,new THREE.CapsuleGeometry(.105,.26,5,10),shirt,0,-.16,0);const elbow=new THREE.Group();elbow.position.set(0,-.31,0);shoulder.add(elbow);block(elbow,new THREE.SphereGeometry(.09,12,10),skin,0,0,0);block(elbow,new THREE.CapsuleGeometry(.085,.24,5,10),shirt,0,-.14,0);const hand=new THREE.Group();hand.position.set(0,-.29,.015);elbow.add(hand);block(hand,new THREE.BoxGeometry(.115,.105,.075),skin,0,-.045,.012);[-.043,-.014,.015,.044].forEach((fx)=>{const f1=new THREE.Group();f1.position.set(fx,-.09,.025);hand.add(f1);block(f1,new THREE.CapsuleGeometry(.014,.052,3,6),skin,0,-.027,0);const f2=new THREE.Group();f2.position.set(0,-.052,0);f1.add(f2);block(f2,new THREE.CapsuleGeometry(.012,.035,3,6),skin,0,-.018,0);});const thumb=new THREE.Group();thumb.position.set(side*.065,-.035,.015);thumb.rotation.z=side*.65;hand.add(thumb);block(thumb,new THREE.CapsuleGeometry(.016,.055,3,6),skin,0,-.03,0);return {shoulder,elbow,hand};};const L=arm(-.43,-1),R=arm(.43,1);const leftArm=L.shoulder,rightArm=R.shoulder,leftElbow=L.elbow,rightElbow=R.elbow,leftHand=L.hand,rightHand=R.hand;
  const head=new THREE.Group();head.position.set(0,1.98,0);root.add(head);
  block(head,new THREE.SphereGeometry(.34,20,16),skin,0,0,0);
  block(head,new THREE.SphereGeometry(.35,18,10,0,Math.PI*2,0,Math.PI*.58),hair,0,.12,-.025);
@@ -28,7 +27,7 @@ function makeRig(scene:THREE.Scene,x:number,z:number,kind:string,index=0):Rig{
  bubble.visible=kind==="caller";
  block(root,new THREE.CylinderGeometry(.2,.25,.09,12),mat("#e4d4b9"),0,1.59,0);
  cube(root,[.035,.48,.018],"#e5c27e",[0,1.28,.25]);
- return {root,leftArm,rightArm,leftLeg,rightLeg,head,mouth,bubble,kind,phase:index*.8};
+ return {root,leftArm,rightArm,leftElbow,rightElbow,leftHand,rightHand,leftLeg,rightLeg,head,mouth,bubble,kind,phase:index*.8};
 }
 function furniture(scene:THREE.Scene){
  const wood=mat("#875631"),lightWood=mat("#c08b56"),dark=mat("#302b2a"),glass=new THREE.MeshStandardMaterial({color:"#72a6b3",roughness:.25,metalness:.1}),fabric=mat("#527b8b");
@@ -59,8 +58,8 @@ function furniture(scene:THREE.Scene){
   for(const dx of [-.56,.56])add(x+dx,.14,-3.32,.12,.28,.16,wood);
  }
  // Tall potted plant beside the lift, with layered foliage.
- add(-5.05,.26,.75,.78,.5,.78,mat("#9b5d43"));add(-5.05,.52,.75,.7,.08,.7,mat("#4b3027"));
- for(let i=0;i<11;i++){const a=i*Math.PI*2/11;const leaf=block(scene,new THREE.ConeGeometry(.14,1.05,8),mat(i%2?"#39865e":"#5ca96e"),-5.05+Math.cos(a)*.28,1.12+Math.sin(i*1.7)*.12,.75+Math.sin(a)*.28);leaf.rotation.z=Math.cos(a)*.58;leaf.rotation.x=Math.sin(a)*.48;}
+ add(-5.72,.26,3.18,.78,.5,.78,mat("#9b5d43"));add(-5.72,.52,3.18,.7,.08,.7,mat("#4b3027"));
+ for(let i=0;i<11;i++){const a=i*Math.PI*2/11;const leaf=block(scene,new THREE.ConeGeometry(.14,1.05,8),mat(i%2?"#39865e":"#5ca96e"),-5.72+Math.cos(a)*.28,1.12+Math.sin(i*1.7)*.12,3.18+Math.sin(a)*.28);leaf.rotation.z=Math.cos(a)*.58;leaf.rotation.x=Math.sin(a)*.48;}
  // Water dispenser with bottle, taps, tray and cup.
  add(5.7,.72,2.65,.52,1.34,.52,mat("#d9e5df"));add(5.7,1.48,2.65,.43,.52,.43,glass);add(5.7,1.77,2.65,.32,.12,.32,mat("#d9e5df"));add(5.7,.28,2.35,.28,.1,.18,mat("#527d8b"));add(5.55,.9,2.36,.07,.12,.035,mat("#d5a55c"));add(5.82,.9,2.36,.07,.12,.035,mat("#6f9fc0"));
  // Compact fixed lift architecture.
@@ -87,19 +86,7 @@ function createRoom(scene:THREE.Scene){
  const ceilingLight=block(scene,new THREE.BoxGeometry(3.2,.08,.45),mat("#ffe4a8"),0,3.85,-1.7);ceilingLight.material=new THREE.MeshBasicMaterial({color:"#ffe5b3"});
  return;
 }
-function poseRig(r:Rig,t:number,activity:string,moving=false){
- const gait=moving?Math.sin(t*9+r.phase):0;
- r.leftLeg.rotation.set(gait*.62,0,0);r.rightLeg.rotation.set(-gait*.62,0,0);
- r.leftArm.rotation.set(-gait*.42,0,0);r.rightArm.rotation.set(gait*.42,0,0);
- r.root.position.y=moving?Math.abs(Math.sin(t*9+r.phase))*.035:0;
- r.head.rotation.set(0,Math.sin(t*1.1+r.phase)*.045,0);
- r.mouth.scale.y=.35;r.bubble.visible=activity==="caller";r.bubble.scale.setScalar(1+Math.sin(t*4+r.phase)*.035);
- if(activity==="gamer"){r.leftArm.rotation.x=-1.1+Math.sin(t*4)*.08;r.rightArm.rotation.x=-1.1+Math.cos(t*4)*.08;r.leftLeg.rotation.x=1.18;r.rightLeg.rotation.x=1.18;r.root.position.y=0;r.head.rotation.x=.06+Math.sin(t*2)*.02;}
- if(activity==="reader"){r.leftArm.rotation.x=-.9;r.rightArm.rotation.x=-.9;r.leftLeg.rotation.x=1.05;r.rightLeg.rotation.x=1.05;r.root.position.y=0;r.head.rotation.x=.16+Math.sin(t*1.4)*.02;}
- if(activity==="caller"){r.rightArm.rotation.x=-2.25;r.rightArm.rotation.z=-.42+Math.sin(t*2.2)*.08;r.leftArm.rotation.x=-.22+Math.sin(t*3)*.12;r.head.rotation.z=.04+Math.sin(t*2)*.05;r.mouth.scale.y=.32+Math.abs(Math.sin(t*5))*.85;}
- if(activity==="drink"){r.rightArm.rotation.x=-1.85;r.rightArm.rotation.z=-.15;r.leftArm.rotation.x=-.3;r.head.rotation.x=.3;r.mouth.scale.y=.2;}
- if(activity==="plant"){r.rightArm.rotation.x=-1.1;r.rightArm.rotation.z=-.75;r.leftArm.rotation.x=-.55;r.head.rotation.x=.2;}
-}
+function poseRig(r:Rig,t:number,activity:string,moving=false,phaseOverride?:number){const phase=phaseOverride??(t*5.2+r.phase),swing=Math.sin(phase),cs=Math.cos(phase);r.leftLeg.rotation.set(moving?swing*.31:0,0,0);r.rightLeg.rotation.set(moving?-swing*.31:0,0,0);r.leftArm.rotation.set(moving?-swing*.30:0,0,moving?-.07:0);r.rightArm.rotation.set(moving?swing*.30:0,0,moving?.07:0);r.leftElbow.rotation.x=moving?-.16-Math.max(0,swing)*.24:0;r.rightElbow.rotation.x=moving?-.16-Math.max(0,-swing)*.24:0;r.leftHand.rotation.set(0,0,0);r.rightHand.rotation.set(0,0,0);r.root.position.y=moving?Math.max(0,Math.sin(phase*2))*.018:0;r.head.rotation.set(0,Math.sin(t*1.1+r.phase)*.045,0);r.mouth.scale.y=.35;r.bubble.visible=activity==="caller";r.bubble.scale.setScalar(1+Math.sin(t*4+r.phase)*.035);if(activity==="gamer"){r.leftArm.rotation.x=-.72+Math.sin(t*4)*.05;r.rightArm.rotation.x=-.72+Math.cos(t*4)*.05;r.leftElbow.rotation.x=-.45;r.rightElbow.rotation.x=-.45;r.leftLeg.rotation.x=1.18;r.rightLeg.rotation.x=1.18;r.root.position.y=0;r.head.rotation.x=.06+Math.sin(t*2)*.02;}if(activity==="reader"){r.leftArm.rotation.x=-.65;r.rightArm.rotation.x=-.65;r.leftElbow.rotation.x=-.55;r.rightElbow.rotation.x=-.55;r.leftLeg.rotation.x=1.05;r.rightLeg.rotation.x=1.05;r.root.position.y=0;r.head.rotation.x=.16+Math.sin(t*1.4)*.02;}if(activity==="caller"){r.rightArm.rotation.x=-1.05;r.rightArm.rotation.z=-.42+Math.sin(t*2.2)*.08;r.rightElbow.rotation.x=-.9;r.leftArm.rotation.x=-.22+Math.sin(t*3)*.12;r.head.rotation.z=.04+Math.sin(t*2)*.05;r.mouth.scale.y=.32+Math.abs(Math.sin(t*5))*.85;}if(activity==="drink"){r.rightArm.rotation.x=-.9;r.rightArm.rotation.z=-.15;r.rightElbow.rotation.x=-1;r.rightHand.rotation.x=-.25;r.leftArm.rotation.x=-.3;r.head.rotation.x=.3;r.mouth.scale.y=.2;}if(activity==="plant"){r.rightArm.rotation.x=-.62;r.rightArm.rotation.z=-.75;r.rightElbow.rotation.x=-.8;r.leftArm.rotation.x=-.35;r.head.rotation.x=.2;}}
 export default function PixelOffice({floor,agents,onSelect,clockingOut=false}:{floor:number;agents:OfficeAgent[];onSelect:(agent:OfficeAgent)=>void;clockingOut?:boolean}){
  const host=useRef<HTMLDivElement>(null);const select=useRef(onSelect);select.current=onSelect;const state=useRef({floor,agents,clockingOut});state.current={floor,agents,clockingOut};
  useEffect(()=>{
@@ -126,18 +113,18 @@ export default function PixelOffice({floor,agents,onSelect,clockingOut=false}:{f
   const animate=()=>{raf=requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;
    if(state.current.floor!==lastFloor){lastFloor=state.current.floor;scene.traverse(o=>{if(o.userData.floorOnly)o.visible=o.userData.floorOnly===lastFloor;});}
    actors.forEach((a,i)=>{const activity=i===0?"gamer":i===1?"reader":i===2?"caller":"idle";poseRig(a,elapsed,activity,false);if(i>=3){a.root.rotation.y=Math.sin(elapsed*.35+i)*.08;}});
-   // Boss patrol uses timed waypoints and explicit pauses. Position, facing and gait share the same path tangent.
-   const route=[{x:-5.45,z:-1.0,wait:2.0,action:"exit"},{x:5.0,z:2.1,wait:3.2,action:"drink"},{x:-4.55,z:.8,wait:3.0,action:"plant"},{x:-2.8,z:-.2,wait:1.5,action:"inspect"},{x:-5.45,z:-1.0,wait:0,action:"walk"}];
-   const travel=9.5,cycle=0;let cursor=(elapsed%52),segment=0,progress=0,walking=false,action="idle";
-   for(let i=0;i<route.length-1;i++){const from=route[i],to=route[i+1];const pause=from.wait;if(cursor<pause){segment=i;progress=0;action=from.action;walking=false;break;}cursor-=pause;if(cursor<travel){segment=i;progress=cursor/travel;walking=true;action="walk";break;}cursor-=travel;if(i===route.length-2){segment=i+1;progress=0;action="idle";walking=false;}}
-   const from=route[segment],to=route[Math.min(segment+1,route.length-1)];
-   if(walking){const eased=THREE.MathUtils.smoothstep(progress,0,1);boss.root.position.x=THREE.MathUtils.lerp(from.x,to.x,eased);boss.root.position.z=THREE.MathUtils.lerp(from.z,to.z,eased);boss.root.rotation.y=Math.atan2(to.x-from.x,to.z-from.z);}
-   else{boss.root.position.x=from.x;boss.root.position.z=from.z;if(action==="drink")boss.root.rotation.y=Math.PI/2;else if(action==="plant")boss.root.rotation.y=-Math.PI/2;}
-   poseRig(boss,elapsed,action,walking);
-   if(action==="drink"&& !walking){boss.rightArm.rotation.x=-1.8;boss.head.rotation.x=.28;}
-   if(action==="plant"&& !walking){boss.rightArm.rotation.x=-1.2;boss.rightArm.rotation.z=-.8;boss.head.rotation.x=.2;}
+   // A perimeter route avoids the reception, display cabinets, sofa and tables.
+   const route=[{x:-5.45,z:-1.0,wait:1.2,action:"exit"},{x:-5.35,z:2.65,wait:0,action:"walk"},{x:-4.95,z:3.0,wait:2.0,action:"plant"},{x:-4.95,z:2.65,wait:0,action:"walk"},{x:4.95,z:2.65,wait:0,action:"walk"},{x:5.25,z:2.65,wait:3.0,action:"drink"},{x:4.95,z:2.65,wait:0,action:"walk"},{x:1.9,z:2.65,wait:1.5,action:"inspect"},{x:-5.35,z:2.65,wait:0,action:"walk"},{x:-5.45,z:-1.0,wait:0,action:"walk"}];
+   const speed=.95;let cycleDuration=0;for(let i=0;i<route.length;i++){const n=route[i],next=route[(i+1)%route.length];cycleDuration+=n.wait+Math.hypot(next.x-n.x,next.z-n.z)/speed;}
+   let cursor=elapsed%cycleDuration,segment=0,progress=0,walking=false,action="idle";
+   for(let i=0;i<route.length;i++){const from=route[i],to=route[(i+1)%route.length],duration=Math.hypot(to.x-from.x,to.z-from.z)/speed;if(cursor<from.wait){segment=i;action=from.action;walking=false;break;}cursor-=from.wait;if(cursor<duration){segment=i;progress=duration?cursor/duration:1;walking=true;action="walk";break;}cursor-=duration;if(i===route.length-1){segment=0;action="exit";walking=false;}}
+   const from=route[segment],to=route[(segment+1)%route.length];
+   if(walking){const eased=THREE.MathUtils.smoothstep(progress,0,1);boss.root.position.x=THREE.MathUtils.lerp(from.x,to.x,eased);boss.root.position.z=THREE.MathUtils.lerp(from.z,to.z,eased);boss.root.rotation.y=Math.atan2(to.x-from.x,to.z-from.z);}else{boss.root.position.x=from.x;boss.root.position.z=from.z;if(action==="drink")boss.root.rotation.y=Math.PI/2;else if(action==="plant")boss.root.rotation.y=-Math.PI/2;}
+   poseRig(boss,elapsed,action,walking,elapsed*speed*5.2);
+   if(action==="drink"&&!walking){boss.rightArm.rotation.x=-.9;boss.rightElbow.rotation.x=-1;boss.head.rotation.x=.28;}
+   if(action==="plant"&&!walking){boss.rightArm.rotation.x=-.62;boss.rightArm.rotation.z=-.75;boss.rightElbow.rotation.x=-.8;boss.head.rotation.x=.2;}
    // Lift doors stay shut. A short open/enter/close event occurs only when the boss reaches the lift.
-   const liftEvent=elapsed%52;let open=0;if(liftEvent<.85)open=THREE.MathUtils.smoothstep(liftEvent,0,.85);else if(liftEvent<2.1)open=1;else if(liftEvent<3.0)open=1-THREE.MathUtils.smoothstep(liftEvent,2.1,3.0);else if(liftEvent>48.0&&liftEvent<49.0)open=THREE.MathUtils.smoothstep(liftEvent,48.0,49.0);else if(liftEvent>=49.0&&liftEvent<51.0)open=1;else if(liftEvent>=51.0)open=1-THREE.MathUtils.smoothstep(liftEvent,51.0,52.0);
+   const liftEvent=(elapsed%cycleDuration)/cycleDuration*52;let open=0;if(liftEvent<.85)open=THREE.MathUtils.smoothstep(liftEvent,0,.85);else if(liftEvent<2.1)open=1;else if(liftEvent<3.0)open=1-THREE.MathUtils.smoothstep(liftEvent,2.1,3.0);else if(liftEvent>48.0&&liftEvent<49.0)open=THREE.MathUtils.smoothstep(liftEvent,48.0,49.0);else if(liftEvent>=49.0&&liftEvent<51.0)open=1;else if(liftEvent>=51.0)open=1-THREE.MathUtils.smoothstep(liftEvent,51.0,52.0);
    lift.left.position.z=-1.42-open*.42;lift.right.position.z=-.58+open*.42;
    if(liftEvent<3.0){boss.root.visible=liftEvent<.8;boss.root.position.x=THREE.MathUtils.lerp(-5.45,-4.8,THREE.MathUtils.smoothstep(liftEvent,.8,2.8));boss.root.position.z=-1.0;}
    else if(liftEvent>=48.0){boss.root.visible=liftEvent<51.5;boss.root.position.x=THREE.MathUtils.lerp(-4.8,-5.45,THREE.MathUtils.smoothstep(liftEvent,48.0,51.2));boss.root.position.z=-1.0;}
