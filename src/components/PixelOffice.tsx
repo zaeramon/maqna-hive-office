@@ -87,6 +87,24 @@ function createRoom(scene:THREE.Scene){
  return;
 }
 function poseRig(r:Rig,t:number,activity:string,moving=false,phaseOverride?:number){const phase=phaseOverride??(t*5.2+r.phase),swing=Math.sin(phase),cs=Math.cos(phase);r.leftLeg.rotation.set(moving?swing*.31:0,0,0);r.rightLeg.rotation.set(moving?-swing*.31:0,0,0);r.leftArm.rotation.set(moving?-swing*.30:0,0,moving?-.07:0);r.rightArm.rotation.set(moving?swing*.30:0,0,moving?.07:0);r.leftElbow.rotation.x=moving?-.16-Math.max(0,swing)*.24:0;r.rightElbow.rotation.x=moving?-.16-Math.max(0,-swing)*.24:0;r.leftHand.rotation.set(0,0,0);r.rightHand.rotation.set(0,0,0);r.root.position.y=moving?Math.max(0,Math.sin(phase*2))*.018:0;r.head.rotation.set(0,Math.sin(t*1.1+r.phase)*.045,0);r.mouth.scale.y=.35;r.bubble.visible=activity==="caller";r.bubble.scale.setScalar(1+Math.sin(t*4+r.phase)*.035);if(activity==="gamer"){r.leftArm.rotation.x=-.72+Math.sin(t*4)*.05;r.rightArm.rotation.x=-.72+Math.cos(t*4)*.05;r.leftElbow.rotation.x=-.45;r.rightElbow.rotation.x=-.45;r.leftLeg.rotation.x=1.18;r.rightLeg.rotation.x=1.18;r.root.position.y=0;r.head.rotation.x=.06+Math.sin(t*2)*.02;}if(activity==="reader"){r.leftArm.rotation.x=-.65;r.rightArm.rotation.x=-.65;r.leftElbow.rotation.x=-.55;r.rightElbow.rotation.x=-.55;r.leftLeg.rotation.x=1.05;r.rightLeg.rotation.x=1.05;r.root.position.y=0;r.head.rotation.x=.16+Math.sin(t*1.4)*.02;}if(activity==="caller"){r.rightArm.rotation.x=-1.05;r.rightArm.rotation.z=-.42+Math.sin(t*2.2)*.08;r.rightElbow.rotation.x=-.9;r.leftArm.rotation.x=-.22+Math.sin(t*3)*.12;r.head.rotation.z=.04+Math.sin(t*2)*.05;r.mouth.scale.y=.32+Math.abs(Math.sin(t*5))*.85;}if(activity==="drink"){r.rightArm.rotation.x=-.9;r.rightArm.rotation.z=-.15;r.rightElbow.rotation.x=-1;r.rightHand.rotation.x=-.25;r.leftArm.rotation.x=-.3;r.head.rotation.x=.3;r.mouth.scale.y=.2;}if(activity==="plant"){r.rightArm.rotation.x=-.62;r.rightArm.rotation.z=-.75;r.rightElbow.rotation.x=-.8;r.leftArm.rotation.x=-.35;r.head.rotation.x=.2;}}
+// Physical walkable-space proxies: furniture footprints and actor personal space.
+const LOBBY_SOLIDS=[
+ {minX:-5.2,maxX:-1.9,minZ:-1.95,maxZ:-.72}, // reception desk
+ {minX:-2.25,maxX:3.25,minZ:-3.75,maxZ:-2.85}, // display cabinets
+ {minX:3.0,maxX:5.75,minZ:1.0,maxZ:2.05}, // sofa
+ {minX:3.45,maxX:5.25,minZ:-.35,maxZ:.48}, // coffee table
+ {minX:3.0,maxX:5.7,minZ:-1.95,maxZ:-.95}, // TV cabinet
+ {minX:5.35,maxX:6.05,minZ:2.25,maxZ:3.05}, // water dispenser
+ {minX:-6.35,maxX:-5.7,minZ:-2.0,maxZ:-.1} // lift housing
+];
+function overlapsSolid(x:number,z:number,r=.24){return LOBBY_SOLIDS.some(o=>x+r>o.minX&&x-r<o.maxX&&z+r>o.minZ&&z-r<o.maxZ);}
+function slideAgainstSolids(current:THREE.Vector3,next:THREE.Vector3,r=.24){
+ if(!overlapsSolid(next.x,next.z,r))return next;
+ const alongX=new THREE.Vector3(next.x,current.y,current.z),alongZ=new THREE.Vector3(current.x,current.y,next.z);
+ if(!overlapsSolid(alongX.x,alongX.z,r))return alongX;
+ if(!overlapsSolid(alongZ.x,alongZ.z,r))return alongZ;
+ return current.clone();
+}
 export default function PixelOffice({floor,agents,onSelect,clockingOut=false}:{floor:number;agents:OfficeAgent[];onSelect:(agent:OfficeAgent)=>void;clockingOut?:boolean}){
  const host=useRef<HTMLDivElement>(null);const select=useRef(onSelect);select.current=onSelect;const state=useRef({floor,agents,clockingOut});state.current={floor,agents,clockingOut};
  useEffect(()=>{
@@ -114,12 +132,12 @@ export default function PixelOffice({floor,agents,onSelect,clockingOut=false}:{f
    if(state.current.floor!==lastFloor){lastFloor=state.current.floor;scene.traverse(o=>{if(o.userData.floorOnly)o.visible=o.userData.floorOnly===lastFloor;});}
    actors.forEach((a,i)=>{const activity=i===0?"gamer":i===1?"reader":i===2?"caller":"idle";poseRig(a,elapsed,activity,false);if(i>=3){a.root.rotation.y=Math.sin(elapsed*.35+i)*.08;}});
    // A perimeter route avoids the reception, display cabinets, sofa and tables.
-   const route=[{x:-5.45,z:-1.0,wait:1.2,action:"exit"},{x:-5.35,z:2.65,wait:0,action:"walk"},{x:-4.95,z:3.0,wait:2.0,action:"plant"},{x:-4.95,z:2.65,wait:0,action:"walk"},{x:4.95,z:2.65,wait:0,action:"walk"},{x:5.25,z:2.65,wait:3.0,action:"drink"},{x:4.95,z:2.65,wait:0,action:"walk"},{x:1.9,z:2.65,wait:1.5,action:"inspect"},{x:-5.35,z:2.65,wait:0,action:"walk"},{x:-5.45,z:-1.0,wait:0,action:"walk"}];
+   const route=[{x:-5.45,z:-1.0,wait:1.2,action:"exit"},{x:-5.25,z:3.25,wait:0,action:"walk"},{x:-5.15,z:3.12,wait:2.0,action:"plant"},{x:-5.15,z:3.25,wait:0,action:"walk"},{x:4.95,z:3.25,wait:0,action:"walk"},{x:5.05,z:3.15,wait:3.0,action:"drink"},{x:4.95,z:3.25,wait:0,action:"walk"},{x:1.9,z:3.25,wait:1.5,action:"inspect"},{x:-5.25,z:3.25,wait:0,action:"walk"},{x:-5.45,z:-1.0,wait:0,action:"walk"}];
    const speed=.95;let cycleDuration=0;for(let i=0;i<route.length;i++){const n=route[i],next=route[(i+1)%route.length];cycleDuration+=n.wait+Math.hypot(next.x-n.x,next.z-n.z)/speed;}
    let cursor=elapsed%cycleDuration,segment=0,progress=0,walking=false,action="idle";
    for(let i=0;i<route.length;i++){const from=route[i],to=route[(i+1)%route.length],duration=Math.hypot(to.x-from.x,to.z-from.z)/speed;if(cursor<from.wait){segment=i;action=from.action;walking=false;break;}cursor-=from.wait;if(cursor<duration){segment=i;progress=duration?cursor/duration:1;walking=true;action="walk";break;}cursor-=duration;if(i===route.length-1){segment=0;action="exit";walking=false;}}
    const from=route[segment],to=route[(segment+1)%route.length];
-   if(walking){const eased=THREE.MathUtils.smoothstep(progress,0,1);boss.root.position.x=THREE.MathUtils.lerp(from.x,to.x,eased);boss.root.position.z=THREE.MathUtils.lerp(from.z,to.z,eased);boss.root.rotation.y=Math.atan2(to.x-from.x,to.z-from.z);}else{boss.root.position.x=from.x;boss.root.position.z=from.z;if(action==="drink")boss.root.rotation.y=Math.PI/2;else if(action==="plant")boss.root.rotation.y=-Math.PI/2;}
+   if(walking){const eased=THREE.MathUtils.smoothstep(progress,0,1);const desired=new THREE.Vector3(THREE.MathUtils.lerp(from.x,to.x,eased),0,THREE.MathUtils.lerp(from.z,to.z,eased));const safe=slideAgainstSolids(boss.root.position,desired,.25);boss.root.position.x=safe.x;boss.root.position.z=safe.z;boss.root.rotation.y=Math.atan2(to.x-from.x,to.z-from.z);}else{boss.root.position.x=from.x;boss.root.position.z=from.z;if(action==="drink")boss.root.rotation.y=Math.atan2(5.7-from.x,2.65-from.z);else if(action==="plant")boss.root.rotation.y=Math.atan2(-5.72-from.x,3.18-from.z);}
    poseRig(boss,elapsed,action,walking,elapsed*speed*5.2);
    if(action==="drink"&&!walking){boss.rightArm.rotation.x=-.9;boss.rightElbow.rotation.x=-1;boss.head.rotation.x=.28;}
    if(action==="plant"&&!walking){boss.rightArm.rotation.x=-.62;boss.rightArm.rotation.z=-.75;boss.rightElbow.rotation.x=-.8;boss.head.rotation.x=.2;}
