@@ -84,7 +84,7 @@ function poseRig(r:Rig,t:number,activity:string,moving=false){
  r.leftArm.rotation.set(-gait*.42,0,0);r.rightArm.rotation.set(gait*.42,0,0);
  r.root.position.y=moving?Math.abs(Math.sin(t*9+r.phase))*.035:0;
  r.head.rotation.set(0,Math.sin(t*1.1+r.phase)*.045,0);
- r.mouth.scale.y=.35;
+ r.mouth.scale.y=.35;r.bubble.visible=activity==="caller";r.bubble.scale.setScalar(1+Math.sin(t*4+r.phase)*.035);
  if(activity==="gamer"){r.leftArm.rotation.x=-1.1+Math.sin(t*4)*.08;r.rightArm.rotation.x=-1.1+Math.cos(t*4)*.08;r.leftLeg.rotation.x=1.18;r.rightLeg.rotation.x=1.18;r.root.position.y=0;r.head.rotation.x=.06+Math.sin(t*2)*.02;}
  if(activity==="reader"){r.leftArm.rotation.x=-.9;r.rightArm.rotation.x=-.9;r.leftLeg.rotation.x=1.05;r.rightLeg.rotation.x=1.05;r.root.position.y=0;r.head.rotation.x=.16+Math.sin(t*1.4)*.02;}
  if(activity==="caller"){r.rightArm.rotation.x=-2.25;r.rightArm.rotation.z=-.42+Math.sin(t*2.2)*.08;r.leftArm.rotation.x=-.22+Math.sin(t*3)*.12;r.head.rotation.z=.04+Math.sin(t*2)*.05;r.mouth.scale.y=.32+Math.abs(Math.sin(t*5))*.85;}
