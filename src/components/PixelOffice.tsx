@@ -16,10 +16,8 @@ function makeRig(scene:THREE.Scene,x:number,z:number,kind:string,index=0):Rig{
  const leftLeg=makeLimb(-.19,hipY,pants,.76,.13),rightLeg=makeLimb(.19,hipY,pants,.76,.13);
  block(leftLeg,new THREE.BoxGeometry(.3,.16,.42),shoe,0,-.69,.08);block(rightLeg,new THREE.BoxGeometry(.3,.16,.42),shoe,0,-.69,.08);
  const torso=block(root,new THREE.CapsuleGeometry(.34,.57,5,10),shirt,0,1.25,0);torso.scale.set(1,1.12,.72);
- const belt=cube(root,[.5,.09,.28],"#554333",[0,.91,0]);
  const makeArm=(px:number)=>{const p=new THREE.Group();p.position.set(px,1.55,0);root.add(p);block(p,new THREE.CapsuleGeometry(.115,.55,4,8),shirt,0,-.29,0);block(p,new THREE.SphereGeometry(.12,10,8),skin,0,-.62,.01);return p;};
  const leftArm=makeArm(-.43),rightArm=makeArm(.43);
- const neck=block(root,new THREE.CylinderGeometry(.12,.14,.2,10),skin,0,1.68,0);
  const head=new THREE.Group();head.position.set(0,1.98,0);root.add(head);
  block(head,new THREE.SphereGeometry(.34,16,12),skin,0,0,0);
  block(head,new THREE.SphereGeometry(.35,14,8,0,Math.PI*2,0,Math.PI*.58),hair,0,.12,-.025);
@@ -117,9 +115,11 @@ export default function PixelOffice({floor,agents,onSelect,clockingOut=false}:{f
    const route=[[-4.7,1.0],[-3.4,2.4],[-1.4,2.6],[1.2,2.3],[3.8,1.5],[4.8,-.5],[2.7,-1.9],[.2,-2.2],[-2.6,-1.8],[-4.6,-.5]];
    const period=52,phase=(elapsed%period)/period*route.length,idx=Math.floor(phase),blend=phase-idx,a=route[idx],b=route[(idx+1)%route.length];boss.root.position.x=THREE.MathUtils.lerp(a[0],b[0],blend);boss.root.position.z=THREE.MathUtils.lerp(a[1],b[1],blend);boss.root.rotation.y=Math.atan2(b[0]-a[0],b[1]-a[1]);poseRig(boss,elapsed,"walk");
    // Lift doors stay shut. A short open/enter/close event occurs only when the boss reaches the lift.
-   const liftEvent=elapsed%52;const approaching=liftEvent>48.2||liftEvent<3.5;const open=approaching?THREE.MathUtils.smoothstep(liftEvent>48.2?52-liftEvent:liftEvent,0,1.1):0;
+   const liftEvent=elapsed%52;let open=0;if(liftEvent<.85)open=THREE.MathUtils.smoothstep(liftEvent,0,.85);else if(liftEvent<2.1)open=1;else if(liftEvent<3.0)open=1-THREE.MathUtils.smoothstep(liftEvent,2.1,3.0);else if(liftEvent>48.0&&liftEvent<49.0)open=THREE.MathUtils.smoothstep(liftEvent,48.0,49.0);else if(liftEvent>=49.0&&liftEvent<51.0)open=1;else if(liftEvent>=51.0)open=1-THREE.MathUtils.smoothstep(liftEvent,51.0,52.0);
    lift.left.position.z=-1.42-open*.42;lift.right.position.z=-.58+open*.42;
-   if(approaching&&liftEvent<2.6){boss.root.visible=true;boss.root.position.x=THREE.MathUtils.lerp(-4.7,-5.25,THREE.MathUtils.smoothstep(liftEvent,0,2.6));boss.root.position.z=-1;}
+   const entering=liftEvent<3.0,exiting=liftEvent>=48.0;
+   if(entering){boss.root.visible=liftEvent<.8;boss.root.position.x=THREE.MathUtils.lerp(-4.7,-5.55,THREE.MathUtils.smoothstep(liftEvent,.8,2.2));boss.root.position.z=-1;}
+   else if(exiting){boss.root.visible=liftEvent>48.7&&liftEvent<51.4;boss.root.position.x=THREE.MathUtils.lerp(-5.55,-4.7,THREE.MathUtils.smoothstep(liftEvent,49.0,51.2));boss.root.position.z=-1;}else boss.root.visible=true;
    renderer.render(scene,camera);
   };animate();
   const click=(event:PointerEvent)=>{const rect=renderer.domElement.getBoundingClientRect();pointer.x=(event.clientX-rect.left)/rect.width*2-1;pointer.y=-(event.clientY-rect.top)/rect.height*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(actorMeshes,false);if(!hits.length)return;const picked=actors.find(a=>{let found=false;a.root.traverse(o=>{if(o===hits[0].object)found=true;});return found;});if(picked){const index=actors.indexOf(picked);const agent=state.current.agents[index];if(agent)select.current(agent);}};
