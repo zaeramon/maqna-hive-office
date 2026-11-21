@@ -15,7 +15,7 @@ function makeRig(scene:THREE.Scene,x:number,z:number,kind:string,index=0):Rig{
  block(leftLeg,new THREE.BoxGeometry(.3,.16,.42),shoe,0,-.69,.08);block(rightLeg,new THREE.BoxGeometry(.3,.16,.42),shoe,0,-.69,.08);
  const torso=block(root,new THREE.CapsuleGeometry(.34,.57,6,12),shirt,0,1.25,0);torso.scale.set(1,1.12,.72);
  const arm=(px:number,side:number)=>{const shoulder=new THREE.Group();shoulder.position.set(px,1.55,0);root.add(shoulder);block(shoulder,new THREE.SphereGeometry(.13,12,10),shirt,0,-.04,0);block(shoulder,new THREE.CapsuleGeometry(.105,.26,5,10),shirt,0,-.16,0);const elbow=new THREE.Group();elbow.position.set(0,-.31,0);shoulder.add(elbow);block(elbow,new THREE.SphereGeometry(.09,12,10),skin,0,0,0);block(elbow,new THREE.CapsuleGeometry(.085,.24,5,10),shirt,0,-.14,0);const hand=new THREE.Group();hand.position.set(0,-.29,.015);elbow.add(hand);block(hand,new THREE.BoxGeometry(.115,.105,.075),skin,0,-.045,.012);[-.043,-.014,.015,.044].forEach((fx)=>{const f1=new THREE.Group();f1.position.set(fx,-.09,.025);hand.add(f1);block(f1,new THREE.CapsuleGeometry(.014,.052,3,6),skin,0,-.027,0);const f2=new THREE.Group();f2.position.set(0,-.052,0);f1.add(f2);block(f2,new THREE.CapsuleGeometry(.012,.035,3,6),skin,0,-.018,0);});const thumb=new THREE.Group();thumb.position.set(side*.065,-.035,.015);thumb.rotation.z=side*.65;hand.add(thumb);block(thumb,new THREE.CapsuleGeometry(.016,.055,3,6),skin,0,-.03,0);return {shoulder,elbow,hand};};const L=arm(-.43,-1),R=arm(.43,1);const leftArm=L.shoulder,rightArm=R.shoulder,leftElbow=L.elbow,rightElbow=R.elbow,leftHand=L.hand,rightHand=R.hand;
- const head=new THREE.Group();head.position.set(0,1.98,0);root.add(head);
+ if(kind==="gamer"){const pad=new THREE.Group();pad.position.set(0,1.02,.57);root.add(pad);block(pad,new THREE.BoxGeometry(.48,.11,.2),mat("#252d3c"),0,0,0);block(pad,new THREE.CylinderGeometry(.045,.045,.035,12),mat("#9bb5c3"),-.13,.065,.015);block(pad,new THREE.CylinderGeometry(.045,.045,.035,12),mat("#9bb5c3"),.13,.065,.015);block(pad,new THREE.SphereGeometry(.025,8,8),mat("#e5bd68"),.13,.065,.07);block(pad,new THREE.SphereGeometry(.025,8,8),mat("#6bb7a4"),.19,.065,.015);}\n const head=new THREE.Group();head.position.set(0,1.98,0);root.add(head);
  block(head,new THREE.SphereGeometry(.34,20,16),skin,0,0,0);
  block(head,new THREE.SphereGeometry(.35,18,10,0,Math.PI*2,0,Math.PI*.58),hair,0,.12,-.025);
  block(head,new THREE.SphereGeometry(.09,10,8),skin,-.34,-.04,0);block(head,new THREE.SphereGeometry(.09,10,8),skin,.34,-.04,0);
@@ -40,7 +40,13 @@ function furniture(scene:THREE.Scene){
  // TV media cabinet with feet, drawers and doors.
  add(4.35,.43,-1.45,2.5,.78,.82,wood);add(4.35,.86,-1.02,2.62,.12,.92,lightWood);add(4.35,.12,-1.45,2.45,.16,.76,dark);
  for(const x of [3.55,4.35,5.15]){add(x,.47,-1.02,.025,.48,.025,lightWood);add(x,.57,-.99,.09,.035,.025,mat("#d7bd83"));}
- add(4.35,1.65,-1.45,2.0,1.24,.16,dark);add(4.35,1.65,-1.34,1.82,1.06,.035,glass);add(4.35,2.29,-1.34,2.0,.07,.035,mat("#4a5966"));
+ add(4.35,1.65,-1.45,2.0,1.24,.16,dark);add(4.35,1.65,-1.34,1.82,1.06,.035,mat("#101b30"));add(4.35,2.29,-1.30,2.0,.07,.035,mat("#4a5966"));
+ // Pixel-art gameplay on the TV screen.
+ add(4.35,1.65,-1.305,1.76,.98,.018,mat("#172d52"));add(4.35,1.28,-1.285,1.76,.22,.018,mat("#2b6380"));add(4.35,1.14,-1.265,1.76,.08,.018,mat("#183c54"));
+ add(3.95,1.48,-1.255,.62,.08,.025,mat("#d8a85f"));add(4.78,1.68,-1.255,.48,.07,.025,mat("#d8a85f"));
+ add(3.82,1.73,-1.245,.18,.26,.04,mat("#f0c66e"));add(3.82,1.91,-1.245,.2,.12,.04,mat("#e9e1cf"));add(3.82,1.55,-1.245,.24,.13,.04,mat("#3b9b9a"));
+ add(4.95,1.87,-1.245,.22,.22,.04,mat("#d86f67"));add(4.95,2.02,-1.245,.26,.08,.04,mat("#e8b56b"));
+ add(3.68,2.05,-1.245,.52,.045,.025,mat("#d95e61"));add(4.72,2.05,-1.245,.36,.045,.025,mat("#69c8a5"));
  // Console and controller placed on the cabinet in front of the screen.
  add(4.35,1.01,-.48,.72,.18,.42,mat("#222c39"));add(4.35,1.11,-.48,.52,.025,.28,mat("#8799a6"));add(4.35,1.13,-.27,.22,.035,.1,mat("#d9b66f"));
  add(3.8,1.1,-.32,.3,.07,.18,mat("#303a4b"));add(3.74,1.15,-.32,.07,.04,.07,mat("#d7bd83"));
@@ -65,8 +71,7 @@ function furniture(scene:THREE.Scene){
  // Compact fixed lift architecture.
  add(-6.15,1.25,-1.0,.28,2.5,2.0,mat("#26394b"));add(-5.98,1.25,-1.0,.05,2.25,1.7,mat("#142235"));
  const left=add(-5.91,1.25,-1.42,.12,2.12,.78,mat("#8ba4b2")),right=add(-5.91,1.25,-.58,.12,2.12,.78,mat("#718c9e"));const sign=add(-5.78,2.72,-1,.08,.22,.72,mat("#d4b16c"));
- // Floor lamps and framed wall art.
- for(const x of [-.5,2.0]){add(x,.1,2.9,.65,.12,.5,wood);add(x,.85,2.9,.08,1.4,.08,mat("#c59b65"));add(x,1.6,2.9,.42,.2,.42,mat("#e8c88b"));}
+ // Framed wall art. Floor-standing lamps removed to clear chairs and walkways.
  for(let i=0;i<5;i++){const x=-4.6+i*2.3;add(x,2.55,-3.79,.92,.7,.1,wood);add(x,2.55,-3.72,.78,.56,.035,mat(["#456b7c","#8a6a8d","#557f6a","#92704d","#7b9baf"][i]));}
  return {left,right,sign};
 }
@@ -86,7 +91,7 @@ function createRoom(scene:THREE.Scene){
  const ceilingLight=block(scene,new THREE.BoxGeometry(3.2,.08,.45),mat("#ffe4a8"),0,3.85,-1.7);ceilingLight.material=new THREE.MeshBasicMaterial({color:"#ffe5b3"});
  return;
 }
-function poseRig(r:Rig,t:number,activity:string,moving=false,phaseOverride?:number){const phase=phaseOverride??(t*5.2+r.phase),swing=Math.sin(phase),cs=Math.cos(phase);r.leftLeg.rotation.set(moving?swing*.31:0,0,0);r.rightLeg.rotation.set(moving?-swing*.31:0,0,0);r.leftArm.rotation.set(moving?-swing*.30:0,0,moving?-.07:0);r.rightArm.rotation.set(moving?swing*.30:0,0,moving?.07:0);r.leftElbow.rotation.x=moving?-.16-Math.max(0,swing)*.24:0;r.rightElbow.rotation.x=moving?-.16-Math.max(0,-swing)*.24:0;r.leftHand.rotation.set(0,0,0);r.rightHand.rotation.set(0,0,0);r.root.position.y=moving?Math.max(0,Math.sin(phase*2))*.018:0;r.head.rotation.set(0,Math.sin(t*1.1+r.phase)*.045,0);r.mouth.scale.y=.35;r.bubble.visible=activity==="caller";r.bubble.scale.setScalar(1+Math.sin(t*4+r.phase)*.035);if(activity==="gamer"){r.leftArm.rotation.x=-.72+Math.sin(t*4)*.05;r.rightArm.rotation.x=-.72+Math.cos(t*4)*.05;r.leftElbow.rotation.x=-.45;r.rightElbow.rotation.x=-.45;r.leftLeg.rotation.x=1.18;r.rightLeg.rotation.x=1.18;r.root.position.y=0;r.head.rotation.x=.06+Math.sin(t*2)*.02;}if(activity==="reader"){r.leftArm.rotation.x=-.65;r.rightArm.rotation.x=-.65;r.leftElbow.rotation.x=-.55;r.rightElbow.rotation.x=-.55;r.leftLeg.rotation.x=1.05;r.rightLeg.rotation.x=1.05;r.root.position.y=0;r.head.rotation.x=.16+Math.sin(t*1.4)*.02;}if(activity==="caller"){r.rightArm.rotation.x=-1.05;r.rightArm.rotation.z=-.42+Math.sin(t*2.2)*.08;r.rightElbow.rotation.x=-.9;r.leftArm.rotation.x=-.22+Math.sin(t*3)*.12;r.head.rotation.z=.04+Math.sin(t*2)*.05;r.mouth.scale.y=.32+Math.abs(Math.sin(t*5))*.85;}if(activity==="drink"){r.rightArm.rotation.x=-.9;r.rightArm.rotation.z=-.15;r.rightElbow.rotation.x=-1;r.rightHand.rotation.x=-.25;r.leftArm.rotation.x=-.3;r.head.rotation.x=.3;r.mouth.scale.y=.2;}if(activity==="plant"){r.rightArm.rotation.x=-.62;r.rightArm.rotation.z=-.75;r.rightElbow.rotation.x=-.8;r.leftArm.rotation.x=-.35;r.head.rotation.x=.2;}}
+function poseRig(r:Rig,t:number,activity:string,moving=false,phaseOverride?:number){const phase=phaseOverride??(t*5.2+r.phase),swing=Math.sin(phase),cs=Math.cos(phase);r.leftLeg.rotation.set(moving?swing*.31:0,0,0);r.rightLeg.rotation.set(moving?-swing*.31:0,0,0);r.leftArm.rotation.set(moving?-swing*.30:0,0,moving?-.07:0);r.rightArm.rotation.set(moving?swing*.30:0,0,moving?.07:0);r.leftElbow.rotation.x=moving?-.16-Math.max(0,swing)*.24:0;r.rightElbow.rotation.x=moving?-.16-Math.max(0,-swing)*.24:0;r.leftHand.rotation.set(0,0,0);r.rightHand.rotation.set(0,0,0);r.root.position.y=moving?Math.max(0,Math.sin(phase*2))*.018:0;r.head.rotation.set(0,Math.sin(t*1.1+r.phase)*.045,0);r.mouth.scale.y=.35;r.bubble.visible=activity==="caller";r.bubble.scale.setScalar(1+Math.sin(t*4+r.phase)*.035);if(activity==="gamer"){r.leftArm.rotation.x=-.78+Math.sin(t*4)*.035;r.rightArm.rotation.x=-.78+Math.cos(t*4)*.035;r.leftArm.rotation.z=.48;r.rightArm.rotation.z=-.48;r.leftElbow.rotation.x=-.82;r.rightElbow.rotation.x=-.82;r.leftHand.rotation.x=-.12;r.rightHand.rotation.x=-.12;r.leftLeg.rotation.x=1.18;r.rightLeg.rotation.x=1.18;r.root.position.y=0;r.head.rotation.x=.06+Math.sin(t*2)*.02;}if(activity==="reader"){r.leftArm.rotation.x=-.65;r.rightArm.rotation.x=-.65;r.leftElbow.rotation.x=-.55;r.rightElbow.rotation.x=-.55;r.leftLeg.rotation.x=1.05;r.rightLeg.rotation.x=1.05;r.root.position.y=0;r.head.rotation.x=.16+Math.sin(t*1.4)*.02;}if(activity==="caller"){const gesture=Math.sin(t*2.4+r.phase);r.leftArm.rotation.x=-.42+Math.max(0,gesture)*.24;r.rightArm.rotation.x=-.42+Math.max(0,-gesture)*.24;r.leftArm.rotation.z=.18+Math.sin(t*1.8+r.phase)*.12;r.rightArm.rotation.z=-.18-Math.sin(t*1.8+r.phase)*.12;r.leftElbow.rotation.x=-.48;r.rightElbow.rotation.x=-.48;r.head.rotation.z=.04+Math.sin(t*2+r.phase)*.05;r.mouth.scale.y=.32+Math.abs(Math.sin(t*5+r.phase))*.85;}if(activity==="drink"){r.rightArm.rotation.x=-.9;r.rightArm.rotation.z=-.15;r.rightElbow.rotation.x=-1;r.rightHand.rotation.x=-.25;r.leftArm.rotation.x=-.3;r.head.rotation.x=.3;r.mouth.scale.y=.2;}if(activity==="plant"){r.rightArm.rotation.x=-.62;r.rightArm.rotation.z=-.75;r.rightElbow.rotation.x=-.8;r.leftArm.rotation.x=-.35;r.head.rotation.x=.2;}}
 // Physical walkable-space proxies: furniture footprints and actor personal space.
 const LOBBY_SOLIDS=[
  {minX:-5.2,maxX:-1.9,minZ:-1.95,maxZ:-.72}, // reception desk
@@ -115,9 +120,9 @@ export default function PixelOffice({floor,agents,onSelect,clockingOut=false}:{f
   const lift=furniture(scene);
   const actors:Rig[]=[];
   const lobbyKinds=["gamer","reader","caller"];
-  const actorPositions=[[3.35,1.3],[-.55,2.35],[.85,1.1],[-3.8,.6],[1.6,-.15],[3.1,.7]];
-  const actorCount=Math.max(3,Math.min(6,state.current.agents.length||3));
-  for(let i=0;i<actorCount;i++){const p=actorPositions[i];const actor=makeRig(scene,p[0],p[1],lobbyKinds[i]||"agent",i);actor.root.rotation.y=i===0?Math.PI:i===1?Math.PI*.7:0;if(i<2){actor.root.position.y=.34;actor.leftLeg.rotation.x=1.15;actor.rightLeg.rotation.x=1.15;}actors.push(actor);}
+  const actorPositions=[[3.35,1.3],[-.55,2.35],[-.72,-2.28],[.72,-2.28],[1.6,.65],[-3.8,.6]];
+  const actorCount=Math.max(4,Math.min(6,state.current.agents.length||4));
+  for(let i=0;i<actorCount;i++){const p=actorPositions[i];const actor=makeRig(scene,p[0],p[1],lobbyKinds[i]||"agent",i);actor.root.rotation.y=i===0?Math.PI:i===1?Math.PI*.7:i===2?Math.PI/2:i===3?-Math.PI/2:0;if(i<2){actor.root.position.y=.34;actor.leftLeg.rotation.x=1.15;actor.rightLeg.rotation.x=1.15;}actors.push(actor);}
   // Seating for the gamer and reader; visible chair legs and padded backs.
   const seatMat=mat("#654c3d");for(const [x,z] of [[3.35,1.65],[-.55,2.7]]){cube(scene,[.85,.16,.78],"#8c684a",[x,.42,z]);cube(scene,[.82,.65,.14], "#74543f",[x,.78,z+.31]);for(const dx of [-.32,.32])for(const dz of [-.28,.28])cube(scene,[.08,.45,.08],"#493729",[x+dx,.2,z+dz]);}
   const boss=makeRig(scene,-4.7,1.0,"boss",4);boss.root.scale.setScalar(1.08);
@@ -130,7 +135,7 @@ export default function PixelOffice({floor,agents,onSelect,clockingOut=false}:{f
   const observer=new ResizeObserver(resize);observer.observe(root);resize();
   const animate=()=>{raf=requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;
    if(state.current.floor!==lastFloor){lastFloor=state.current.floor;scene.traverse(o=>{if(o.userData.floorOnly)o.visible=o.userData.floorOnly===lastFloor;});}
-   actors.forEach((a,i)=>{const activity=i===0?"gamer":i===1?"reader":i===2?"caller":"idle";poseRig(a,elapsed,activity,false);if(i>=3){a.root.rotation.y=Math.sin(elapsed*.35+i)*.08;}});
+   actors.forEach((a,i)=>{const activity=i===0?"gamer":i===1?"reader":(i===2||i===3)?"caller":"idle";poseRig(a,elapsed,activity,false);if(i>=3){a.root.rotation.y=Math.sin(elapsed*.35+i)*.08;}});
    // A perimeter route avoids the reception, display cabinets, sofa and tables.
    const route=[{x:-5.45,z:-1.0,wait:1.2,action:"exit"},{x:-5.25,z:3.25,wait:0,action:"walk"},{x:-5.15,z:3.12,wait:2.0,action:"plant"},{x:-5.15,z:3.25,wait:0,action:"walk"},{x:4.95,z:3.25,wait:0,action:"walk"},{x:5.05,z:3.15,wait:3.0,action:"drink"},{x:4.95,z:3.25,wait:0,action:"walk"},{x:1.9,z:3.25,wait:1.5,action:"inspect"},{x:-5.25,z:3.25,wait:0,action:"walk"},{x:-5.45,z:-1.0,wait:0,action:"walk"}];
    const speed=.95;let cycleDuration=0;for(let i=0;i<route.length;i++){const n=route[i],next=route[(i+1)%route.length];cycleDuration+=n.wait+Math.hypot(next.x-n.x,next.z-n.z)/speed;}
