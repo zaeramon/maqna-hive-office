@@ -34,6 +34,8 @@ jobs:
           VITE_GITHUB_GATEWAY_URL: https://ulbkkjgbmvjxqbqurtux.supabase.co/functions/v1/hive-mind-github
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
