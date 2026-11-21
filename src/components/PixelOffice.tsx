@@ -78,15 +78,18 @@ function createRoom(scene:THREE.Scene){
  const ceilingLight=block(scene,new THREE.BoxGeometry(3.2,.08,.45),mat("#ffe4a8"),0,3.85,-1.7);ceilingLight.material=new THREE.MeshBasicMaterial({color:"#ffe5b3"});
  return;
 }
-function poseRig(r:Rig,t:number,activity:string){
- const walk=Math.sin(t*7+r.phase),sway=Math.sin(t*3+r.phase);
- r.leftLeg.rotation.x=walk*.48;r.rightLeg.rotation.x=-walk*.48;
- r.leftArm.rotation.x=-walk*.35;r.rightArm.rotation.x=walk*.35;
- r.root.rotation.y=Math.sin(t*.7+r.phase)*.08;
- r.head.rotation.y=Math.sin(t*1.2+r.phase)*.08;
- if(activity==="gamer"){r.leftArm.rotation.x=-1.05+Math.sin(t*5)*.12;r.rightArm.rotation.x=-1.05+Math.cos(t*5)*.12;r.leftLeg.rotation.x=.8;r.rightLeg.rotation.x=.8;r.root.position.y=.28+Math.sin(t*2)*.018;}
- if(activity==="reader"){r.leftArm.rotation.x=-.85;r.rightArm.rotation.x=-.85;r.head.rotation.x=.18+Math.sin(t*1.5)*.025;r.leftLeg.rotation.x=.2;r.rightLeg.rotation.x=.2;}
- if(activity==="caller"){r.rightArm.rotation.x=-2.4;r.rightArm.rotation.z=-.35+Math.sin(t*2)*.08;r.head.rotation.z=.08+Math.sin(t*2)*.06;}
+function poseRig(r:Rig,t:number,activity:string,moving=false){
+ const gait=moving?Math.sin(t*9+r.phase):0;
+ r.leftLeg.rotation.set(gait*.62,0,0);r.rightLeg.rotation.set(-gait*.62,0,0);
+ r.leftArm.rotation.set(-gait*.42,0,0);r.rightArm.rotation.set(gait*.42,0,0);
+ r.root.position.y=moving?Math.abs(Math.sin(t*9+r.phase))*.035:0;
+ r.head.rotation.set(0,Math.sin(t*1.1+r.phase)*.045,0);
+ r.mouth.scale.y=.35;
+ if(activity==="gamer"){r.leftArm.rotation.x=-1.1+Math.sin(t*4)*.08;r.rightArm.rotation.x=-1.1+Math.cos(t*4)*.08;r.leftLeg.rotation.x=1.18;r.rightLeg.rotation.x=1.18;r.root.position.y=0;r.head.rotation.x=.06+Math.sin(t*2)*.02;}
+ if(activity==="reader"){r.leftArm.rotation.x=-.9;r.rightArm.rotation.x=-.9;r.leftLeg.rotation.x=1.05;r.rightLeg.rotation.x=1.05;r.root.position.y=0;r.head.rotation.x=.16+Math.sin(t*1.4)*.02;}
+ if(activity==="caller"){r.rightArm.rotation.x=-2.25;r.rightArm.rotation.z=-.42+Math.sin(t*2.2)*.08;r.leftArm.rotation.x=-.22+Math.sin(t*3)*.12;r.head.rotation.z=.04+Math.sin(t*2)*.05;r.mouth.scale.y=.32+Math.abs(Math.sin(t*5))*.85;}
+ if(activity==="drink"){r.rightArm.rotation.x=-1.85;r.rightArm.rotation.z=-.15;r.leftArm.rotation.x=-.3;r.head.rotation.x=.3;r.mouth.scale.y=.2;}
+ if(activity==="plant"){r.rightArm.rotation.x=-1.1;r.rightArm.rotation.z=-.75;r.leftArm.rotation.x=-.55;r.head.rotation.x=.2;}
 }
 export default function PixelOffice({floor,agents,onSelect,clockingOut=false}:{floor:number;agents:OfficeAgent[];onSelect:(agent:OfficeAgent)=>void;clockingOut?:boolean}){
  const host=useRef<HTMLDivElement>(null);const select=useRef(onSelect);select.current=onSelect;const state=useRef({floor,agents,clockingOut});state.current={floor,agents,clockingOut};
@@ -98,9 +101,11 @@ export default function PixelOffice({floor,agents,onSelect,clockingOut=false}:{f
   const lift=furniture(scene);
   const actors:Rig[]=[];
   const lobbyKinds=["gamer","reader","caller"];
-  const actorPositions=[[-2.6,1.35],[-.15,1.8],[2.15,1.45],[-3.8,.6],[1.6,-.15],[3.1,.7]];
+  const actorPositions=[[3.35,1.3],[-.55,2.35],[.85,1.1],[-3.8,.6],[1.6,-.15],[3.1,.7]];
   const actorCount=Math.max(3,Math.min(6,state.current.agents.length||3));
-  for(let i=0;i<actorCount;i++){const p=actorPositions[i];actors.push(makeRig(scene,p[0],p[1],lobbyKinds[i]||"agent",i));}
+  for(let i=0;i<actorCount;i++){const p=actorPositions[i];const actor=makeRig(scene,p[0],p[1],lobbyKinds[i]||"agent",i);actor.root.rotation.y=i===0?Math.PI:i===1?Math.PI*.7:0;if(i<2){actor.root.position.y=.34;actor.leftLeg.rotation.x=1.15;actor.rightLeg.rotation.x=1.15;}actors.push(actor);}
+  // Seating for the gamer and reader; visible chair legs and padded backs.
+  const seatMat=mat("#654c3d");for(const [x,z] of [[3.35,1.65],[-.55,2.7]]){cube(scene,[.85,.16,.78],"#8c684a",[x,.42,z]);cube(scene,[.82,.65,.14], "#74543f",[x,.78,z+.31]);for(const dx of [-.32,.32])for(const dz of [-.28,.28])cube(scene,[.08,.45,.08],"#493729",[x+dx,.2,z+dz]);}
   const boss=makeRig(scene,-4.7,1.0,"boss",4);boss.root.scale.setScalar(1.08);
   // Decorative details: picture frames, ceiling lamps and wall-mounted signage.
   for(let i=0;i<4;i++){const x=-4.7+i*2.8;const frame=cube(scene,[1.05,.72,.08],"#b88b55",[x,2.45,-3.78]);cube(scene,[.88,.55,.04],["#456b7c","#8a6a8d","#557f6a","#92704d"][i],[x,2.45,-3.72]);}
@@ -111,9 +116,17 @@ export default function PixelOffice({floor,agents,onSelect,clockingOut=false}:{f
   const observer=new ResizeObserver(resize);observer.observe(root);resize();
   const animate=()=>{raf=requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);elapsed+=dt;
    if(state.current.floor!==lastFloor){lastFloor=state.current.floor;scene.traverse(o=>{if(o.userData.floorOnly)o.visible=o.userData.floorOnly===lastFloor;});}
-   actors.forEach((a,i)=>{poseRig(a,elapsed,i===0?"gamer":i===1?"reader":i===2?"caller":"walk");if(i>=3){a.root.position.x=actorPositions[i][0]+Math.sin(elapsed*.25+i)*.3;a.root.position.z=actorPositions[i][1]+Math.cos(elapsed*.22+i)*.25;}});
-   const route=[[-4.7,1.0],[-3.4,2.4],[-1.4,2.6],[1.2,2.3],[3.8,1.5],[4.8,-.5],[2.7,-1.9],[.2,-2.2],[-2.6,-1.8],[-4.6,-.5]];
-   const period=52,phase=(elapsed%period)/period*route.length,idx=Math.floor(phase),blend=phase-idx,a=route[idx],b=route[(idx+1)%route.length];boss.root.position.x=THREE.MathUtils.lerp(a[0],b[0],blend);boss.root.position.z=THREE.MathUtils.lerp(a[1],b[1],blend);boss.root.rotation.y=Math.atan2(b[0]-a[0],b[1]-a[1]);poseRig(boss,elapsed,"walk");
+   actors.forEach((a,i)=>{const activity=i===0?"gamer":i===1?"reader":i===2?"caller":"idle";poseRig(a,elapsed,activity,false);if(i>=3){a.root.rotation.y=Math.sin(elapsed*.35+i)*.08;}});
+   // Boss patrol uses timed waypoints and explicit pauses. Position, facing and gait share the same path tangent.
+   const route=[{x:-4.35,z:1.45,wait:1,action:"idle"},{x:5.0,z:2.1,wait:3.2,action:"drink"},{x:5.0,z:2.1,wait:0,action:"walk"},{x:-4.55,z:.8,wait:3.0,action:"plant"},{x:-4.55,z:.8,wait:0,action:"walk"},{x:-2.8,z:-.2,wait:1.5,action:"inspect"},{x:-4.35,z:1.45,wait:0,action:"walk"}];
+   const travel=7.2,cycle=0;let cursor=(elapsed%52),segment=0,progress=0,walking=false,action="idle";
+   for(let i=0;i<route.length-1;i++){const from=route[i],to=route[i+1];const pause=from.wait;if(cursor<pause){segment=i;progress=0;action=from.action;walking=false;break;}cursor-=pause;if(cursor<travel){segment=i;progress=cursor/travel;walking=true;action="walk";break;}cursor-=travel;if(i===route.length-2){segment=i+1;progress=0;action="idle";walking=false;}}
+   const from=route[segment],to=route[Math.min(segment+1,route.length-1)];
+   if(walking){const eased=THREE.MathUtils.smoothstep(progress,0,1);boss.root.position.x=THREE.MathUtils.lerp(from.x,to.x,eased);boss.root.position.z=THREE.MathUtils.lerp(from.z,to.z,eased);boss.root.rotation.y=Math.atan2(to.x-from.x,to.z-from.z);}
+   else{boss.root.position.x=from.x;boss.root.position.z=from.z;if(action==="drink")boss.root.rotation.y=Math.PI/2;else if(action==="plant")boss.root.rotation.y=-Math.PI/2;}
+   poseRig(boss,elapsed,action,walking);
+   if(action==="drink"&& !walking){boss.rightArm.rotation.x=-1.8;boss.head.rotation.x=.28;}
+   if(action==="plant"&& !walking){boss.rightArm.rotation.x=-1.2;boss.rightArm.rotation.z=-.8;boss.head.rotation.x=.2;}
    // Lift doors stay shut. A short open/enter/close event occurs only when the boss reaches the lift.
    const liftEvent=elapsed%52;let open=0;if(liftEvent<.85)open=THREE.MathUtils.smoothstep(liftEvent,0,.85);else if(liftEvent<2.1)open=1;else if(liftEvent<3.0)open=1-THREE.MathUtils.smoothstep(liftEvent,2.1,3.0);else if(liftEvent>48.0&&liftEvent<49.0)open=THREE.MathUtils.smoothstep(liftEvent,48.0,49.0);else if(liftEvent>=49.0&&liftEvent<51.0)open=1;else if(liftEvent>=51.0)open=1-THREE.MathUtils.smoothstep(liftEvent,51.0,52.0);
    lift.left.position.z=-1.42-open*.42;lift.right.position.z=-.58+open*.42;
